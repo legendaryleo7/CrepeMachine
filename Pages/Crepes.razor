@@ -1,0 +1,39 @@
+@page "/"
+@using BlazorApp.Data
+@inject ReadSerialPortService _readSerialPortService
+@* @inject MockReadSerialPortService _readSerialPortService *@
+@inject CrepeMachine _crepeMachine
+
+<PageTitle>Crepes</PageTitle>
+<div>
+    <h1 class="inline-block-child">@_crepeMachine.TemperatureOneCelsius.ToString("F1")°</h1>
+    <img class="inline-block-child" src="Images/drawing.svg" width="30%">
+    <h1 class="inline-block-child">@_crepeMachine.TemperatureTwoCelsius.ToString("F1")°</h1>
+</div>
+
+<div>
+    <p class="subtitle">Power distribution: @_crepeMachine.PowerOne.ToString("P0") /
+        @_crepeMachine.PowerTwo.ToString("P0")</p>
+</div>
+
+
+@code {
+
+    Timer _updateTimer;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _updateTimer = new Timer(state => { InvokeAsync(GetValue); }, null, 0, 100);
+    }
+
+    public async Task GetValue()
+    {
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    public void Dispose()
+    {
+        _updateTimer.Dispose();
+    }
+}
