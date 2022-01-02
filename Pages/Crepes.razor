@@ -12,6 +12,7 @@
 <PageTitle>Crepes</PageTitle>
 <Layout>
     <LayoutHeader>
+        @* See Flex rules at https://blazorise.com/docs/helpers/utilities *@
         <Div Flex="Flex.JustifyContent.Between" Margin="Margin.Is3.FromBottom">
             <DisplayHeading Size="DisplayHeadingSize.Is1">La Creperie</DisplayHeading>
             <Heading Size="HeadingSize.Is1">@_crepeMachine.TemperatureOneCelsius.ToString("F1")° / @_crepeMachine.TemperatureTwoCelsius.ToString("F1")°</Heading>
@@ -19,8 +20,12 @@
         </Div>
     </LayoutHeader>
     <LayoutContent>
+        
+        @* See API documentation at https://blazorise.com/docs/extensions/chart *@
         <LineChart @ref="horizontalLineChart" TItem="LiveDataPoint" OptionsObject="@horizontalLineChartOptions">
-            <ChartStreaming TItem="LiveDataPoint" Options="new ChartStreamingOptions { Delay = 500 }"
+            
+            @* See API documentation at https://blazorise.com/docs/extensions/chart-live *@
+            <ChartStreaming TItem="LiveDataPoint" Options="@chartStreamingOptions"
                 Refreshed="@OnHorizontalLineRefreshed" />
         </LineChart>   
     </LayoutContent>
@@ -28,9 +33,22 @@
 
 @code {
     LineChart<LiveDataPoint> horizontalLineChart;
-    Random random = new Random(DateTime.Now.Millisecond);
+
+    // See source at https://github.com/Megabit/Blazorise/blob/67da3e1fb3256f83f25eb378026eda10768322b5/Source/Extensions/Blazorise.Charts.Streaming/ChartStreamingOptions.cs
+    ChartStreamingOptions chartStreamingOptions = new ChartStreamingOptions 
+    {         
+        // Delay added to the chart in milliseconds so that upcoming values are known before lines are plotted. This makes the chart look like a continual stream rather than very jumpy on the right hand side. Specify the maximum expected delay.
+        Delay = 500, 
+
+        // Duration of the chart in milliseconds (how much time of data it will show).
+        Duration = 60 * 1000,
+
+        // Refresh interval of data in milliseconds. onRefresh callback function will be called at this interval.
+        Refresh = 1000,
+    };
 
     string[] Labels = { "Red", "Blue", "Yellow", "Green", "Purple", "Orange" };
+
     List<string> backgroundColors = new List<string> { 
         ChartColor.FromRgba( 255, 99, 132, 0.2f ), 
         ChartColor.FromRgba( 54, 162, 235, 0.2f ), 
@@ -56,6 +74,12 @@
         public object Y { get; set; }
     }
     
+    // Seems like there is more strongly typed version of this that is now supported, but when
+    // the demo code was released it was was done this way because it gets serialized and sent 
+    // over to ChartJS. I wonder if it supports the additional options that ChartJS supports.
+    // See https://blazorise.com/docs/extensions/chart (at the very bottom)
+    // TODO: See if we can pass options like Axis Range - see https://www.chartjs.org/docs/3.3.0/axes/#axis-range-settings
+    // Source for Strongly Typed Version: https://github.com/Megabit/Blazorise/tree/76f87f2e0ba7710a79b05807037ae55ebd30784b/Source/Extensions/Blazorise.Charts/Options
     object horizontalLineChartOptions = new
     {
         Title = new
@@ -122,7 +146,6 @@
     where TModel : ChartModel
     {
         await chart.Clear();
-        
         await chart.AddLabelsDatasetsAndUpdate(Labels, getDataSets.Select(x => x.Invoke()).ToArray());
     }
 
@@ -153,16 +176,21 @@
                     LineTension = 0.5f,
                     CubicInterpolationMode = "monotone", 
                     BorderDash = new List<int> { 8,4 },
-
                 };
         }
 
+    // Seems to be the method called to get new data for the chart
     Task OnHorizontalLineRefreshed(ChartStreamingData<LiveDataPoint> data)
     {
+        // This method is called once per data series. Pay attention to the dataset index.
+        // 0 = Left burner
+        // 1 = Right burner
         data.Value = new LiveDataPoint
         {
             X = _crepeMachine.LastUpdated,
-            Y = data.DatasetIndex == 0 ? _crepeMachine.TemperatureOneCelsius : _crepeMachine.TemperatureTwoCelsius,
+            Y = data.DatasetIndex == 0 
+                ? _crepeMachine.TemperatureOneCelsius 
+                : _crepeMachine.TemperatureTwoCelsius,
         };
         
         return Task.CompletedTask;
