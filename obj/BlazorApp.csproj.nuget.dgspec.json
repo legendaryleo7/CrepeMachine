@@ -38,6 +38,18 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "Blazorise.Bulma": {
+              "target": "Package",
+              "version": "[0.9.5.3, )"
+            },
+            "Blazorise.Charts.Streaming": {
+              "target": "Package",
+              "version": "[0.9.5.3, )"
+            },
+            "Blazorise.Icons.FontAwesome": {
+              "target": "Package",
+              "version": "[0.9.5.3, )"
+            },
             "System.IO.Ports": {
               "target": "Package",
               "version": "[6.0.0, )"

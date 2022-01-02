@@ -1,30 +1,99 @@
 @page "/"
 @using BlazorApp.Data
+@using Blazorise.Charts
+@using Blazorise.Charts.Streaming;
+
+@* TODO: Uncomment this line and comment out the mock service. *@
 @* @inject ReadSerialPortService _readSerialPortService *@
 @inject MockReadSerialPortService _readSerialPortService
+
 @inject CrepeMachine _crepeMachine
 
 <PageTitle>Crepes</PageTitle>
-<div>
-    <h1 class="inline-block-child">@_crepeMachine.TemperatureOneCelsius.ToString("F1")°</h1>
-    <img class="inline-block-child" src="Images/drawing.svg" width="30%">
-    <h1 class="inline-block-child">@_crepeMachine.TemperatureTwoCelsius.ToString("F1")°</h1>
-</div>
-
-<div>
-    <p class="subtitle">Power distribution: @_crepeMachine.PowerOne.ToString("P0") /
-        @_crepeMachine.PowerTwo.ToString("P0")</p>
-</div>
-
+<Layout>
+    <LayoutHeader>
+        <Div Flex="Flex.JustifyContent.Between" Margin="Margin.Is3.FromBottom">
+            <DisplayHeading Size="DisplayHeadingSize.Is1">La Creperie</DisplayHeading>
+            <Heading Size="HeadingSize.Is1">@_crepeMachine.TemperatureOneCelsius.ToString("F1")° / @_crepeMachine.TemperatureTwoCelsius.ToString("F1")°</Heading>
+            <Heading Size="HeadingSize.Is1">@_crepeMachine.PowerOne.ToString("P0") / @_crepeMachine.PowerTwo.ToString("P0")</Heading>
+        </Div>
+    </LayoutHeader>
+    <LayoutContent>
+        <LineChart @ref="horizontalLineChart" TItem="LiveDataPoint" OptionsObject="@horizontalLineChartOptions">
+            <ChartStreaming TItem="LiveDataPoint" Options="new ChartStreamingOptions { Delay = 500 }"
+                Refreshed="@OnHorizontalLineRefreshed" />
+        </LineChart>   
+    </LayoutContent>
+</Layout>
 
 @code {
+    LineChart<LiveDataPoint> horizontalLineChart;
+    Random random = new Random(DateTime.Now.Millisecond);
 
-    Timer _updateTimer;
+    string[] Labels = { "Red", "Blue", "Yellow", "Green", "Purple", "Orange" };
+    List<string> backgroundColors = new List<string> { 
+        ChartColor.FromRgba( 255, 99, 132, 0.2f ), 
+        ChartColor.FromRgba( 54, 162, 235, 0.2f ), 
+        ChartColor.FromRgba( 255, 206, 86, 0.2f ), 
+        ChartColor.FromRgba( 75, 192, 192, 0.2f ),
+        ChartColor.FromRgba( 153, 102, 255, 0.2f ), 
+        ChartColor.FromRgba( 255, 159, 64, 0.2f ) };
+        
+    List<string> borderColors = new List<string> 
+    { 
+        ChartColor.FromRgba( 255, 99, 132, 1f ), 
+        ChartColor.FromRgba( 54, 162, 235, 1f ), 
+        ChartColor.FromRgba( 255, 206, 86, 1f ), 
+        ChartColor.FromRgba( 75, 192, 192, 1f ), 
+        ChartColor.FromRgba( 153, 102, 255, 1f ), 
+        ChartColor.FromRgba( 255, 159, 64, 1f ) 
+    };
+
+    public struct LiveDataPoint
+    {
+        public object X { get; set; }
+
+        public object Y { get; set; }
+    }
+    
+    object horizontalLineChartOptions = new
+    {
+        Title = new
+        {
+            Display = true,
+            Text = "Crepe Maker"
+        },
+        Scales = new
+        {
+            YAxes = new object[]
+            {
+                new {
+                    ScaleLabel = new 
+                    {
+                        Display = true, 
+                        LabelString = "Temperature" 
+                    },
+                },
+            }
+        },
+        Tooltips = new
+        {
+            Mode = "nearest",
+            Intersect = false
+        },
+        Hover = new
+        {
+            Mode = "nearest",
+            Intersect = false
+        }
+    };
+
+    Timer? _updateTimer;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _updateTimer = new Timer(state => { InvokeAsync(GetValue); }, null, 0, 100);
+        _updateTimer = new Timer(state => { InvokeAsync(GetValue); }, null, 0, 3000);
     }
 
     public async Task GetValue()
@@ -34,6 +103,68 @@
 
     public void Dispose()
     {
-        _updateTimer.Dispose();
+        _updateTimer?.Dispose();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.WhenAll(
+            HandleRedraw(horizontalLineChart, GetLineChartDataset1, GetLineChartDataSet2));
+        }
+    }
+
+    async Task HandleRedraw<TDataSet, TItem, TOptions, TModel>(BaseChart<TDataSet, TItem, TOptions, TModel> chart, params
+    Func<TDataSet>[] getDataSets)
+    where TDataSet : ChartDataset<TItem>
+    where TOptions : ChartOptions
+    where TModel : ChartModel
+    {
+        await chart.Clear();
+        
+        await chart.AddLabelsDatasetsAndUpdate(Labels, getDataSets.Select(x => x.Invoke()).ToArray());
+    }
+
+    LineChartDataset<LiveDataPoint> GetLineChartDataset1()
+    {
+        return new LineChartDataset<LiveDataPoint>
+        {
+            Data = new List<LiveDataPoint>(),
+            Label = "Left",
+            BackgroundColor = backgroundColors[0],
+            BorderColor = borderColors[0],
+            Fill = false,
+            LineTension = 0.5f,
+            CubicInterpolationMode = "monotone",
+            BorderDash = new List<int> { 8, 4 },
+        };
+    }
+
+    LineChartDataset<LiveDataPoint> GetLineChartDataSet2()
+        {
+            return new LineChartDataset<LiveDataPoint>
+                {
+                    Data = new List<LiveDataPoint>(),
+                    Label = "Right",
+                    BackgroundColor = backgroundColors[0],
+                    BorderColor = borderColors[1],
+                    Fill = false,
+                    LineTension = 0.5f,
+                    CubicInterpolationMode = "monotone", 
+                    BorderDash = new List<int> { 8,4 },
+
+                };
+        }
+
+    Task OnHorizontalLineRefreshed(ChartStreamingData<LiveDataPoint> data)
+    {
+        data.Value = new LiveDataPoint
+        {
+            X = _crepeMachine.LastUpdated,
+            Y = data.DatasetIndex == 0 ? _crepeMachine.TemperatureOneCelsius : _crepeMachine.TemperatureTwoCelsius,
+        };
+        
+        return Task.CompletedTask;
     }
 }
