@@ -27,6 +27,8 @@ public class MockReadSerialPortService
 
     private void GenerateMockValues()
     {
+        _crepeMachine.LastUpdated = DateTime.Now;
+        
         var random = new Random();
 
         if (i % 3 == 0)

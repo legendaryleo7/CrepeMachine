@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Blazorise.Bulma" Version="0.9.5.3" />
+    <PackageReference Include="Blazorise.Charts.Streaming" Version="0.9.5.3" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.5.3" />
     <PackageReference Include="System.IO.Ports" Version="6.0.0" />
   </ItemGroup>
 

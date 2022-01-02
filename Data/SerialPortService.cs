@@ -36,8 +36,9 @@ public class ReadSerialPortService
         {
             string indata = sp.ReadLine();
             var chunks = indata.Split(',');
-            _crepeMachine.TemperatureOneCelsius = decimal.Parse(chunks[0]);
-            _crepeMachine.TemperatureTwoCelsius = decimal.Parse(chunks[1]);
+            _crepeMachine.LastUpdated = DateTime.Now;
+            _crepeMachine.TemperatureOneCelsius = decimal.Parse(chunks[1]);
+            _crepeMachine.TemperatureTwoCelsius = decimal.Parse(chunks[0]);
             _crepeMachine.PowerOne = decimal.Parse(chunks[6]);
             _crepeMachine.PowerTwo = decimal.Parse(chunks[7]);
             

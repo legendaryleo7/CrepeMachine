@@ -12,4 +12,10 @@
   <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <SourceRoot Include="/Users/legendaryleo7/.nuget/packages/" />
   </ItemGroup>
+  <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <Import Project="$(NuGetPackageRoot)blazorise/0.9.5.3/buildTransitive/Blazorise.props" Condition="Exists('$(NuGetPackageRoot)blazorise/0.9.5.3/buildTransitive/Blazorise.props')" />
+    <Import Project="$(NuGetPackageRoot)blazorise.charts/0.9.5.3/buildTransitive/Blazorise.Charts.props" Condition="Exists('$(NuGetPackageRoot)blazorise.charts/0.9.5.3/buildTransitive/Blazorise.Charts.props')" />
+    <Import Project="$(NuGetPackageRoot)blazorise.charts.streaming/0.9.5.3/buildTransitive/Blazorise.Charts.Streaming.props" Condition="Exists('$(NuGetPackageRoot)blazorise.charts.streaming/0.9.5.3/buildTransitive/Blazorise.Charts.Streaming.props')" />
+    <Import Project="$(NuGetPackageRoot)blazorise.bulma/0.9.5.3/buildTransitive/Blazorise.Bulma.props" Condition="Exists('$(NuGetPackageRoot)blazorise.bulma/0.9.5.3/buildTransitive/Blazorise.Bulma.props')" />
+  </ImportGroup>
 </Project>
